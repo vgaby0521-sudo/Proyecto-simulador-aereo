@@ -1,0 +1,90 @@
+services:
+  # M1 - Coordinador (Servidor Central)
+  m1_coordinador:
+    build:
+      context: .
+      dockerfile: Dockerfile.m1
+    container_name: m1_coordinador
+    hostname: m1_coordinador
+    ports:
+      - "5555:5555"
+    networks:
+      - trafico_aereo
+    restart: unless-stopped
+
+  # M2 - Simulador de Vuelos
+  m2_simulador:
+    build:
+      context: .
+      dockerfile: Dockerfile.m2
+    container_name: m2_simulador
+    hostname: m2_simulador
+    depends_on:
+      - m1_coordinador
+    environment:
+      - COORDINADOR_HOST=m1_coordinador
+      - COORDINADOR_PORT=5555
+    networks:
+      - trafico_aereo
+    restart: unless-stopped
+
+  # M3 - Base de Datos
+  m3_base_datos:
+    build:
+      context: .
+      dockerfile: Dockerfile.m3
+    container_name: m3_base_datos
+    hostname: m3_base_datos
+    depends_on:
+      - m1_coordinador
+    volumes:
+      - ./data:/data
+    environment:
+      - COORDINADOR_HOST=m1_coordinador
+      - COORDINADOR_PORT=5555
+    networks:
+      - trafico_aereo
+    restart: unless-stopped
+
+  # M4 - Mapa Visualizador
+  m4_mapa:
+    build:
+      context: .
+      dockerfile: Dockerfile.m4
+    container_name: m4_mapa
+    hostname: m4_mapa
+    depends_on:
+      - m1_coordinador
+    ports:
+      - "5000:5000"
+    environment:
+      - COORDINADOR_HOST=m1_coordinador
+      - COORDINADOR_PORT=5555
+    networks:
+      - trafico_aereo
+    restart: unless-stopped
+
+  # M5 - Panel de Control
+  m5_control:
+    build:
+      context: .
+      dockerfile: Dockerfile.m5
+    container_name: m5_control
+    hostname: m5_control
+    depends_on:
+      - m1_coordinador
+    environment:
+      - COORDINADOR_HOST=m1_coordinador
+      - COORDINADOR_PORT=5555
+    networks:
+      - trafico_aereo
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+networks:
+  trafico_aereo:
+    driver: bridge
+
+volumes:
+  datos_vuelos:

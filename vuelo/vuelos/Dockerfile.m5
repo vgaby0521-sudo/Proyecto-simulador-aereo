@@ -1,0 +1,7 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY m5_control.py .
+
+CMD ["python", "-u", "m5_control.py"]
